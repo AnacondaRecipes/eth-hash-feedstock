@@ -1,6 +1,5 @@
 {% set name = "eth-hash" %}
-{% set version = "0.5.1" %}
-
+{% set version = "0.7.0" %}
 
 package:
   name: {{ name|lower }}
@@ -8,40 +7,55 @@ package:
 
 source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
-  sha256: 9805075f653e114a31a99678e93b257fb4082337696f4eff7b4371fe65158409
+  sha256: bacdc705bfd85dadd055ecd35fd1b4f846b671add101427e089a4ca2e8db310a
 
 build:
+  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
   number: 0
-  noarch: python
-  script: {{ PYTHON }} -m pip install . -vv
+  skip: True  # [py<39]
 
 requirements:
   host:
+    - python
     - pip
-    - python >=3.5,<4.0
+    - wheel
+    - setuptools
     - setuptools-markdown
-    - pycryptodome
   run:
-    - python >=3.5,<4.0
+    - python
+    # If you want to use eth-hash it was need to pycryptodome at runtime
+    # https://eth-hash.readthedocs.io/en/latest/quickstart.html#quickstart
     - pycryptodome >=3.6.6,<4
   run_constrained:
-    - pycryptodome >=3.6.6,<4
-    - pysha3 >=1.0.0,<2.0.0
+    - pysha3 >=1.0.0,<2.0.0  # [py<39]
+    - safe-pysha3 >=1.0.0  # [py>=39]
 
 test:
+  source_files:
+    - pyproject.toml
+    - tests
   imports:
     - eth_hash
     - eth_hash.backends
   commands:
     - pip check
+    - pytest -vv tests/backends/pycryptodome/test_results.py
+    # Main channel don`t consist pysha3, test disabled.
+    #- pytest -vv tests/backends/pysha3/test_results.py
   requires:
     - pip
+    - pytest
 
 about:
   home: https://github.com/ethereum/eth-hash
   summary: 'eth-hash: The Ethereum hashing function, keccak256, sometimes (erroneously) called sha3'
   license: MIT
+  license_family: MIT
   license_file: LICENSE
+  description: The Ethereum hashing function, keccak256, sometimes (erroneously) called sha3
+  dev_url: https://github.com/ethereum/eth-hash
+  doc_url: https://github.com/ethereum/eth-hash/blob/main/README.md
+
 
 extra:
   recipe-maintainers:
